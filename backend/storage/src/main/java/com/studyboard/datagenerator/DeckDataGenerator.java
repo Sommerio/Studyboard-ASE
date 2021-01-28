@@ -9,16 +9,18 @@ import com.studyboard.repository.FlashcardRepository;
 import com.studyboard.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Profile("generateData")
 @Component
-public class DeckDataGenerator {
+public class DeckDataGenerator implements ApplicationRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DeckDataGenerator.class);
     private static final int NUMBER_OF_DECKS_TO_GENERATE = 15;
@@ -30,6 +32,7 @@ public class DeckDataGenerator {
     private final FlashcardRepository flashcardRepository;
     private final Faker faker;
 
+    @Autowired
     public DeckDataGenerator(DeckRepository deckRepository, UserRepository userRepository, FlashcardRepository flashcardRepository) {
         this.deckRepository = deckRepository;
         this.userRepository = userRepository;
@@ -37,8 +40,7 @@ public class DeckDataGenerator {
         faker = new Faker();
     }
 
-    @PostConstruct
-    private void generateDecksAndCards() {
+    public void run(ApplicationArguments args) {
         LOGGER.info("Generating {} flashcard entries", NUMBER_OF_FLASHCARDS_TO_GENERATE);
         for(int i=0; i < NUMBER_OF_FLASHCARDS_TO_GENERATE; i++) {
                 Flashcard flashcard = new Flashcard();
