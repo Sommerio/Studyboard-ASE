@@ -43,13 +43,16 @@ public class StudyboardApplication {
 			for(int i=0; i < 20; i++) {
 				Flashcard flashcard = new Flashcard();
 				if (i % 2 == 0) {
-					flashcard.setQuestion(faker.ancient().god());
+					flashcard.setQuestion(faker.shakespeare().kingRichardIIIQuote());
 					flashcard.setAnswer(faker.yoda().quote());
+					flashcard.setNextDueDate(LocalDateTime.now());
+					flashcard.setConfidenceLevel(0);
 				} else {
-					flashcard.setQuestion(faker.book().title());
+					flashcard.setQuestion(faker.shakespeare().hamletQuote());
 					flashcard.setAnswer(faker.hitchhikersGuideToTheGalaxy().quote());
+					flashcard.setConfidenceLevel(faker.number().numberBetween(1, 5));
+					flashcard.setNextDueDate(LocalDateTime.of(2021, 01, 29, 8, 9, 45));
 				}
-				flashcard.setConfidenceLevel(0);
 				flashcard.setEasiness(2.5);
 				flashcard.setCorrectnessStreak(0);
 				flashcard.setInterval(0);
@@ -66,17 +69,60 @@ public class StudyboardApplication {
 			user = userRepository.save(user);
 			for (int i = 0; i < 15; i++) {
 				Deck deck = new Deck();
-				deck.setName(faker.superhero().name());
+				if(i % 3 == 0) {
+					deck.setName(faker.ancient().god());
+				} else if(i % 3 == 1) {
+					deck.setName(faker.book().author());
+				} else {
+					deck.setName(faker.superhero().name());
+				}
 				deck.setCreationDate(LocalDate.of(2021, 01, 15));
 				deck.setLastTimeUsed(LocalDateTime.of(2021, 01, 15, 23, 59, 20));
 				deck.setSize(faker.number().numberBetween(1, 20));
 				deck.setFavorite(false);
 				deck.setUser(user);
 				Deck saved = deckRepository.save(deck);
+				int rand = faker.number().numberBetween(1, 20);
 				for (int j = 0; j < deck.getSize(); j++) {
-					flashcardRepository.assignFlashcard(saved.getId(), faker.number().numberBetween(1, 20));
+					if(rand + j <= deck.getSize()) {
+						flashcardRepository.assignFlashcard(saved.getId(), rand + j);
+					} else {
+						flashcardRepository.assignFlashcard(saved.getId(), rand + j - deck.getSize());
+					}
 				}
 			}
+			Deck deck = new Deck();
+			deck.setName("Shakespeare");
+			deck.setCreationDate(LocalDate.of(2021, 01, 15));
+			deck.setLastTimeUsed(LocalDateTime.of(2021, 01, 15, 23, 59, 20));
+			deck.setSize(faker.number().numberBetween(1, 20));
+			deck.setFavorite(false);
+			deck.setUser(user);
+			Deck saved = deckRepository.save(deck);
+			int rand = faker.number().numberBetween(1, 20);
+			for (int j = 0; j < deck.getSize(); j++) {
+				Flashcard flashcard = new Flashcard();
+				if (j % 3 == 0) {
+					flashcard.setQuestion(faker.shakespeare().kingRichardIIIQuote());
+					flashcard.setAnswer("King Richard III");
+					flashcard.setNextDueDate(LocalDateTime.now());
+				} else if(j % 3 == 1){
+					flashcard.setQuestion(faker.shakespeare().hamletQuote());
+					flashcard.setAnswer("Hamlet");
+					flashcard.setNextDueDate(LocalDateTime.now());
+				} else {
+					flashcard.setQuestion(faker.shakespeare().romeoAndJulietQuote());
+					flashcard.setAnswer("Romeo and Juliet");
+					flashcard.setNextDueDate(LocalDateTime.now());
+				}
+				flashcard.setConfidenceLevel(0);
+				flashcard.setEasiness(2.5);
+				flashcard.setCorrectnessStreak(0);
+				flashcard.setInterval(0);
+				Flashcard savedF = flashcardRepository.save(flashcard);
+				flashcardRepository.assignFlashcard(saved.getId(), savedF.getId());
+			}
+
 		};
 	}
 }
