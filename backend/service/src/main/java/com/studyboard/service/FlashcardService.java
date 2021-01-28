@@ -85,14 +85,6 @@ public interface FlashcardService {
     Flashcard createFlashcard(Flashcard flashcard);
 
     /**
-     * Assign the flashcard to decks it belongs to
-     *
-     * @param flashcardId of the card that was created
-     * @param decks       with the id's of decks flashcard is assigned to
-     */
-    void assignFlashcard(long flashcardId, String decks);
-
-    /**
      * Get all decks a flashcard belongs to
      *
      * @param flashcardId of the card

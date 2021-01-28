@@ -3,11 +3,9 @@ package com.studyboard.service.implementation;
 import com.studyboard.exception.DeckDoesNotExist;
 import com.studyboard.exception.FlashcardConstraintException;
 import com.studyboard.exception.FlashcardDoesNotExist;
-import com.studyboard.exception.UserDoesNotExist;
 import com.studyboard.model.Deck;
 import com.studyboard.model.Document;
 import com.studyboard.model.Flashcard;
-import com.studyboard.model.User;
 import com.studyboard.repository.DeckRepository;
 import com.studyboard.repository.FlashcardRepository;
 import com.studyboard.repository.UserRepository;
@@ -17,12 +15,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.print.Doc;
 import javax.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Service used to manage decks and flashcards. Performs decks and flashcards creation, getting, edit and deletion
@@ -44,12 +40,12 @@ public class SimpleFlashcardService implements FlashcardService {
         logger.info("Getting all decks belonging to the user with username " + username);
         List<Deck> decks = new ArrayList<>();
         for (Deck deck : deckRepository.findByUserUsernameOrderByLastTimeUsedDesc(username)) {
-            if(deck.isFavorite()) {
+            if (deck.isFavorite()) {
                 decks.add(deck);
             }
         }
         for (Deck deck : deckRepository.findByUserUsernameOrderByLastTimeUsedDesc(username)) {
-            if(!deck.isFavorite()) {
+            if (!deck.isFavorite()) {
                 decks.add(deck);
             }
         }
@@ -97,7 +93,7 @@ public class SimpleFlashcardService implements FlashcardService {
         if (version == 2 && deck.getSize() < size) {
             throw new IllegalArgumentException("Deck size too large!");
         }
-        if(updateLastTimeUsed) {
+        if (updateLastTimeUsed) {
             deck.setLastTimeUsed(LocalDateTime.now());
         }
         deckRepository.save(deck);
@@ -139,10 +135,10 @@ public class SimpleFlashcardService implements FlashcardService {
         List<Document> documents = flashcard.getDocumentReferences();
         Flashcard created = flashcardRepository.save(flashcard);
         logger.info("Created new flashcard with question " + flashcard.getQuestion());
-        for(Deck deck : decks) {
+        for (Deck deck : decks) {
             this.assignFlashcard(deck.getId(), created.getId());
         }
-        for(Document document : documents) {
+        for (Document document : documents) {
             this.addReference(created.getId(), document.getId());
         }
         return created;
@@ -154,21 +150,6 @@ public class SimpleFlashcardService implements FlashcardService {
         Deck deck = findDeckById(deckId);
         deck.setSize(deck.getSize() + 1);
         deckRepository.save(deck);
-    }
-
-    @Override
-    public void assignFlashcard(long flashcardId, String decks) {
-        String[] deckIds = decks.split("#deck#");
-        for (int i = 0; i < deckIds.length; i++) {
-            if (!deckIds[i].equals("")) {
-                long id = Long.parseLong(deckIds[i]);
-                flashcardRepository.assignFlashcard(id, flashcardId);
-                logger.info("Assigning flashcard " + flashcardId + " to deck" + id);
-                Deck deck = findDeckById(id);
-                deck.setSize(deck.getSize() + 1);
-                deckRepository.save(deck);
-            }
-        }
     }
 
     @Override
@@ -198,16 +179,16 @@ public class SimpleFlashcardService implements FlashcardService {
         Flashcard storedFlashcard = getOneFlashcard(flashcard.getId());
         storedFlashcard.setQuestion(flashcard.getQuestion());
         storedFlashcard.setAnswer(flashcard.getAnswer());
-        for(Deck deck : storedFlashcard.getDecks()) {
+        for (Deck deck : storedFlashcard.getDecks()) {
             removeAssignment(deck.getId(), storedFlashcard.getId());
         }
-        for(Deck deck  : flashcard.getDecks()) {
+        for (Deck deck : flashcard.getDecks()) {
             assignFlashcard(deck.getId(), storedFlashcard.getId());
         }
-        for(Document document : storedFlashcard.getDocumentReferences()) {
+        for (Document document : storedFlashcard.getDocumentReferences()) {
             removeReference(storedFlashcard.getId(), document.getId());
         }
-        for(Document document : flashcard.getDocumentReferences()) {
+        for (Document document : flashcard.getDocumentReferences()) {
             addReference(storedFlashcard.getId(), document.getId());
         }
         storedFlashcard.setDocumentReferences(flashcard.getDocumentReferences());
@@ -228,7 +209,9 @@ public class SimpleFlashcardService implements FlashcardService {
     @Override
     public void rateFlashcard(Flashcard flashcard) throws FlashcardConstraintException {
         Flashcard storedFlashcard = getOneFlashcard(flashcard.getId());
-        try {
+        if(flashcard.getConfidenceLevel() < 0 || flashcard.getConfidenceLevel() > 5) {
+            throw new FlashcardConstraintException("Flashcard confidence level must be between 1 and 5!");
+        } else {
             storedFlashcard.setConfidenceLevel(flashcard.getConfidenceLevel());
             //SM-2 Algorithm Calculations
             if (storedFlashcard.getConfidenceLevel() >= 3) {
@@ -253,9 +236,10 @@ public class SimpleFlashcardService implements FlashcardService {
             storedFlashcard.setNextDueDate(LocalDateTime.now().plusDays(storedFlashcard.getInterval()));
             logger.info("Rated the flashcard with question " + storedFlashcard.getQuestion());
             flashcardRepository.save(storedFlashcard);
-        } catch (ConstraintViolationException e) {
-            throw new FlashcardConstraintException("Flashcard confidence level must be between 1 and 5!");
         }
+    /*catch (ConstraintViolationException e) {
+            throw new FlashcardConstraintException("Flashcard confidence level must be between 1 and 5!");
+        }*/
 
     }
 
@@ -268,15 +252,6 @@ public class SimpleFlashcardService implements FlashcardService {
         }
         logger.info("Searching for the deck with the name " + deck.getName());
         return deck;
-    }
-
-    private User findUserById(long userId) {
-        User user = userRepository.findUserById(userId);
-        if (user == null) {
-            logger.warn("User does not exist");
-            throw new UserDoesNotExist();
-        }
-        return user;
     }
 }
 

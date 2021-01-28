@@ -451,9 +451,12 @@
                   <span (click)="this.showAnswer=false" *ngIf="this.showAnswer" class="close" matTooltip="Hide answer">
                    <mat-icon>visibility_off</mat-icon>
                   </span>
-                  <ngb-rating [(rate)]="this.currentlyRevisedCard.confidenceLevel" [max]="5"
-                              [readonly]="false" matTooltip="Change confidence level"
-                              style="margin-top:20px; font-size:40px"></ngb-rating>
+                  <div>
+                    <ngb-rating [(rate)]="this.currentRate" [max]="5"
+                              [readonly]="false" matTooltip="Rating your confidence level influences how often a flashcard appears during revision"
+                                (rateChange)="rateFlashcardInRevision(this.currentlyRevisedCard, this.currentRate)"
+                                style="margin-top:20px; font-size:40px"></ngb-rating>
+                  </div>
                   <span (click)="getRevisionFlashcard();" *ngIf="this.revisionCounter<this.revisionFlashcards.length"
                         class="close"
                         matTooltip="Warning: Not changing the existing confidence level counts as rating with the same confidence level again.">

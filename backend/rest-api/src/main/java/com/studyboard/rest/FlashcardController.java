@@ -128,21 +128,6 @@ public class FlashcardController {
     }
 
     @RequestMapping(
-            value = "/flashcard{flashcardId}/decks{deckIds}",
-            method = RequestMethod.PUT,
-            produces = "application/json")
-    @ApiOperation(
-            value = "Assign a flashcard.",
-            authorizations = {@Authorization(value = "apiKey")})
-    public ResponseEntity assignFlashcard(
-            @PathVariable(name = "deckIds") String deckIds,
-            @RequestBody FlashcardDTO flashcardDTO) {
-        System.out.println("Assigning flashcard: " + flashcardDTO.getId());
-        flashcardService.assignFlashcard(flashcardDTO.getId(), deckIds);
-        return ResponseEntity.ok().build();
-    }
-
-    @RequestMapping(
             value = "/flashcard{flashcardId}/decks",
             method = RequestMethod.GET,
             produces = "application/json")

@@ -1,8 +1,6 @@
 package com.studyboard.repository;
 
-import com.studyboard.model.Deck;
-import com.studyboard.model.Flashcard;
-import com.studyboard.model.User;
+import com.studyboard.model.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +36,16 @@ public class FlashcardRepositoryTest {
     private static final LocalDateTime DECK_LAST_TIME_USED = LocalDateTime.of(2020, 12, 2, 15, 17);
     private static final LocalDate DECK_CREATION_DATE = LocalDate.of(2020, 12, 2);
 
+    private static final Long SPACE_ID = 1L;
+    private static final String SPACE_NAME = "Test";
+    private static final LocalDate SPACE_CREATION_DATE = LocalDate.of(2020, 12, 2);
+
+    private static final Long DOCUMENT_ID = 1L;
+    private static final Boolean DOCUMENT_NEEDS_TRANSCRIPTION = false;
+    private static final String DOCUMENT_TRANSCRIPTION = "";
+    private static final String DOCUMENT_NAME = "Test_Document";
+    private static final String DOCUMENT_PATH = "";
+
     private static final Long FLASHCARD_ID_2 = 2L;
     private static final String FLASHCARD_QUESTION_2 = "test_question2";
     private static final String FLASHCARD_ANSWER_2 = "test_answer2";
@@ -70,6 +78,12 @@ public class FlashcardRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private SpaceRepository spaceRepository;
+
+    @Autowired
+    private DocumentRepository documentRepository;
 
     @Test
     public void repositorySavesFlashcardCorrectly() {
@@ -278,5 +292,55 @@ public class FlashcardRepositoryTest {
         allFlashcards = flashcardRepository.findByDeckId(DECK_ID);
 
         Assertions.assertEquals(0, allFlashcards.size());
+    }
+
+    @Test
+    public void assignAndRemoveReference() {
+        User user = new User();
+        user.setId(USER_ID);
+        user.setUsername(USER_USERNAME);
+        user.setPassword(USER_PASSWORD);
+        user.setEmail(USER_EMAIL);
+        user.setLoginAttempts(USER_LOGIN_ATTEMPTS);
+        user.setRole(USER_ROLE);
+        user.setEnabled(USER_ENABLED);
+        userRepository.save(user);
+
+        Space space = new Space();
+        space.setId(SPACE_ID);
+        space.setName(SPACE_NAME);
+        space.setCreationDate(SPACE_CREATION_DATE);
+        space.setUser(user);
+        spaceRepository.save(space);
+
+        Document document = new Document();
+        document.setId(2L);
+        document.setName(DOCUMENT_NAME);
+        document.setNeedsTranscription(DOCUMENT_NEEDS_TRANSCRIPTION);
+        document.setTranscription(DOCUMENT_TRANSCRIPTION);
+        document.setFilePath(DOCUMENT_PATH);
+        document.setSpace(space);
+        documentRepository.save(document);
+
+        Flashcard flashcard = new Flashcard();
+        flashcard.setId(FLASHCARD_ID_2);
+        flashcard.setQuestion(FLASHCARD_QUESTION_2);
+        flashcard.setAnswer(FLASHCARD_ANSWER_2);
+        flashcard.setEasiness(FLASHCARD_EASINESS_2);
+        flashcard.setInterval(FLASHCARD_INTERVAL_2);
+        flashcard.setCorrectnessStreak(FLASHCARD_CORRECTNESS_STREAK_2);
+        flashcard.setNextDueDate(FLASHCARD_NEXT_DUE_DATE_2);
+        Flashcard f = flashcardRepository.save(flashcard);
+        flashcard.setId(f.getId());
+        flashcardRepository.addReference(flashcard.getId(), document.getId());
+
+        List<Long> references = flashcardRepository.getAllReferences(flashcard.getId());
+
+        Assertions.assertEquals(document.getId(), references.get(0));
+
+        flashcardRepository.removeReference(flashcard.getId(), document.getId());
+        references = flashcardRepository.getAllReferences(flashcard.getId());
+
+        Assertions.assertEquals(0, references.size());
     }
 }
