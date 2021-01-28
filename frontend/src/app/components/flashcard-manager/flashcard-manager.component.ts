@@ -57,7 +57,7 @@ export class FlashcardManagerComponent implements OnInit {
   confidenceError: boolean = false;
   optionError: boolean = false;
   currentRate = 0;
-  deckNameSearch: string;
+  deckNameSearch: string = '';
   deckNameSearchModal: string;
   documentNameSearch: string;
   documentNameSearchEdit: string;
@@ -423,6 +423,7 @@ export class FlashcardManagerComponent implements OnInit {
   getRevisionFlashcard() {
     this.showAnswer = false;
     this.currentlyRevisedCard = this.revisionFlashcards[this.revisionCounter];
+    this.currentRate = this.currentlyRevisedCard.confidenceLevel;
     if (this.revisionCounter < this.revisionFlashcards.length) {
       this.revisionCounter = this.revisionCounter + 1;
     }
@@ -537,9 +538,6 @@ export class FlashcardManagerComponent implements OnInit {
    * Sends a request to rate a specific flashcard while in revision mode.
    */
   rateFlashcardInRevision(flashcard: Flashcard, rate: number) {
-    if (this.revisionCounter < this.revisionFlashcards.length) {
-      this.getRevisionFlashcard();
-    }
     if (rate != null) {
       flashcard.confidenceLevel = rate;
     }
@@ -559,6 +557,9 @@ export class FlashcardManagerComponent implements OnInit {
           this.openSnackbar(this.errorMessage, 'warning-snackbar');
         });
     }
+    if (this.revisionCounter < this.revisionFlashcards.length) {
+       this.getRevisionFlashcard();
+     }
   }
 
   /**
